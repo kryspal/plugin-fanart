@@ -1,6 +1,6 @@
 # fanart: fanart.tv image provider plugin
 
-Owner: A4. Official plugin (closed source, change request 0117), implementing the protocol v1 `ImageProvider` service with `github.com/kryspal/plugin-sdk/sdk` (change request 0146, phase 1). It declares the capabilities `images.movie` and `images.series` and no feature code (free plan). It is bundled in the image and reserved as an official ID; after the administrator enters their key and enables it on the plugin page, they tick it under "Image sources" in the library settings. The scraper (A2) merges its candidates through `domain.ImageProviders`.
+An official Kryspal Media plugin that provides artwork from fanart.tv. It implements the protocol v1 `ImageProvider` service with [`github.com/kryspal/plugin-sdk`](https://github.com/kryspal/plugin-sdk) and declares the capabilities `images.movie` and `images.series`. After the administrator enters their key and enables the plugin, it can be ticked under "Image sources" in the library settings; the server merges its candidates with those of other image providers.
 
 ## Data source and terms
 
@@ -38,8 +38,12 @@ Order within each type: the preferred language, its fallbacks in order, images w
 
 ## Version and bundling
 
-The version number is written only in `VERSION` (`go:embed`, also the `<version>` of the bundled directory). `deploy/plugins/build.sh` builds it; `CATALOG.json` is the display data for the plugin catalog.
+The version number is written only in `VERSION` (embedded with `go:embed`; it is also the plugin's reported version). `CATALOG.json` holds the display data for the plugin catalog. Releases are built by the CI workflows in `.github/workflows/`: a `v*` tag builds linux/amd64 and linux/arm64 packages and creates a GitHub Release. Any change that alters the binary needs a new `VERSION`; a published version is never changed.
 
 ## Tests
 
-`go test ./plugins/fanart` (`-short` skips the process test): recorded-shape responses with made-up IDs (`images_test.go`: conversion, ordering, HTTPS upgrade, likes parsing, type filter and limit, IMDb fallback, cache, empty results without requests, 401/403/404/429/5xx, one request at a time and spacing) and `plugin_test.go` (`TestDescribe`, `TestConfigure`, `TestPluginProcess`). Tests never call the real API.
+`go test ./...` (`-short` skips the process test): recorded-shape responses with made-up IDs (`images_test.go`: conversion, ordering, HTTPS upgrade, likes parsing, type filter and limit, IMDb fallback, cache, empty results without requests, 401/403/404/429/5xx, one request at a time and spacing) and `plugin_test.go` (`TestDescribe`, `TestConfigure`, `TestPluginProcess`). Tests never call the real API.
+
+## License
+
+Apache License 2.0, see `LICENSE` and `NOTICE`.
