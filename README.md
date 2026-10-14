@@ -44,6 +44,14 @@ The version number is written only in `VERSION` (embedded with `go:embed`; it is
 
 `go test ./...` (`-short` skips the process test): recorded-shape responses with made-up IDs (`images_test.go`: conversion, ordering, HTTPS upgrade, likes parsing, type filter and limit, IMDb fallback, cache, empty results without requests, 401/403/404/429/5xx, one request at a time and spacing) and `plugin_test.go` (`TestDescribe`, `TestConfigure`, `TestPluginProcess`). Tests never call the real API.
 
+## Official builds and releases
+
+This repository is the source code of the official Kryspal Media `fanart` plugin. Official versions are built by this repository's GitHub Actions workflow from a `v*` tag, attached to a GitHub Release, and then added to the Kryspal Media plugin catalog, which Kryspal signs. The Kryspal Media server installs and updates official plugins from that signed catalog and verifies the signature.
+
+A binary you build from this source yourself is **not** signed by Kryspal and is not part of the official catalog. You are free to build, modify and run it under the Apache License 2.0, but the server treats it as a third-party plugin.
+
+Release process (maintainers): update `VERSION` and `CHANGELOG.md` for any change that alters the binary, wait for the CI workflow to pass on `main`, then push an annotated tag `vX.Y.Z` that matches `VERSION`. The release workflow builds linux/amd64 and linux/arm64 packages, creates the GitHub Release and notifies the main repository, which verifies the packages and publishes the catalog. A published version is never changed.
+
 ## License
 
 Apache License 2.0, see `LICENSE` and `NOTICE`.
