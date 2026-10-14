@@ -1,0 +1,14 @@
+{
+  "name": "fanart.tv",
+  "nameI18n": {
+    "zh-TW": "fanart.tv",
+    "zh-CN": "fanart.tv"
+  },
+  "description": "High-quality logos, clear art, discs, banners and backgrounds for movies and series from fanart.tv. You enter your own personal API key.",
+  "descriptionI18n": {
+    "zh-TW": "從 fanart.tv 取得電影與劇集的高品質標誌、透明美術圖、光碟、橫幅與背景。需要填入你自己的個人 API 金鑰。",
+    "zh-CN": "从 fanart.tv 获取电影和剧集的高品质标志、透明美术图、光盘、横幅与背景。需要填入你自己的个人 API 密钥。"
+  },
+  "owner": "Kryspal Media",
+  "capabilities": ["images.movie", "images.series"]
+}
