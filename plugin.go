@@ -25,7 +25,7 @@ const (
 // apiKeyRE is the shape of a fanart.tv key: 32 hexadecimal characters.
 var apiKeyRE = regexp.MustCompile(`^[0-9a-fA-F]{32}$`)
 
-// versionFile is the single source of the plugin version: the manifest's version, and also the <version> of the bundled directory (change request 0017).
+// versionFile is the single source of the plugin version: the manifest's version.
 //
 //go:embed VERSION
 var versionFile string
