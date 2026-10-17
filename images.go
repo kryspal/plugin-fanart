@@ -180,7 +180,20 @@ func (p *plugin) GetImages(ctx context.Context, req *pluginv1.GetImagesRequest) 
 			out = append(out, c.img)
 		}
 	}
-	return &pluginv1.GetImagesResponse{Images: out}, nil
+	resp := &pluginv1.GetImagesResponse{Images: out}
+	if known := imageCount(body); known == 0 && hostShowsNotices() {
+		resp.Notices = noImagesNotice() // fanart.tv answered, but has nothing for this ID (a title that has images, but none of the types asked for, says nothing)
+	}
+	return resp, nil
+}
+
+// imageCount is the number of images fanart.tv has for the title, of any type.
+func imageCount(body map[string][]fanartImage) int {
+	n := 0
+	for _, l := range body {
+		n += len(l)
+	}
+	return n
 }
 
 type ranked struct {

@@ -29,6 +29,10 @@ fanart.tv serves artwork by TMDB/IMDb ID (movies) and TVDB ID (series). Each use
 
 Order within each type: the preferred language, its fallbacks in order, images without text, English, the rest (backdrops put images without text first); then the HD variant before the standard one; then more likes first. `lang` `00` becomes an empty language. `http://` asset URLs are upgraded to `https://`; anything else is dropped. Default 10 images per type (`limit_per_type` overrides).
 
+## Notices
+
+On a host that lists `scrape_notices` in `KRYSPAL_HOST_FEATURES`, a title for which fanart.tv has no image of any type (404 or an empty answer) gets one `not_found` notice. Errors (bad key, rate limit, server error) stay errors, as before. The sentence is fixed and never contains the key or a URL.
+
 ## Settings
 
 | Key | Type | Description |
