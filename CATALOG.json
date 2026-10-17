@@ -10,6 +10,7 @@
     "zh-CN": "从 fanart.tv 获取电影和剧集的高品质标志、透明美术图、光盘、横幅与背景。需要填入你自己的个人 API 密钥。"
   },
   "owner": "Kryspal Media",
+  "minServer": "0.9.2-beta",
   "homepage": "https://github.com/kryspal/plugin-fanart",
   "capabilities": ["images.movie", "images.series"]
 }

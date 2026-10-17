@@ -5,7 +5,7 @@ All notable changes to this plugin are listed here. The version in `VERSION` is 
 ## 1.1.0
 
 - Tells servers that show it when fanart.tv knows no images for a title ("not found" notice), so the user can tell "nothing there" from "not asked". Older servers get exactly the answer they got before.
-- Built with plugin SDK v0.2.0.
+- Built with plugin SDK v0.2.0. Needs server 0.9.2 or newer.
 
 ## 1.0.3
 
