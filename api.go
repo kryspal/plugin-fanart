@@ -4,15 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
-	"io"
 	"net/http"
-	"net/url"
-	"strconv"
-	"sync"
 	"time"
 
 	"github.com/kryspal/plugin-sdk/sdk"
+	"github.com/kryspal/plugin-sdk/sdk/httpclient"
 )
 
 // errUnauthorized means fanart.tv rejected the key.
@@ -28,75 +24,34 @@ const (
 )
 
 // api is the fanart.tv HTTP client: one request at a time, at least interval between two requests. The key goes in the api-key header, never in the URL.
-type api struct {
-	http     *http.Client
-	interval time.Duration
-	mu       sync.Mutex
-	last     time.Time
-}
+type api struct{ c *httpclient.Client }
 
-func newAPI() *api {
-	return &api{http: &http.Client{Timeout: requestTimeout}, interval: minInterval}
+func newAPI() *api { return newAPIWith(minInterval, nil) }
+
+// newAPIWith is newAPI with another interval and transport (tests).
+func newAPIWith(interval time.Duration, rt http.RoundTripper) *api {
+	return &api{c: httpclient.New(httpclient.Config{Name: "fanart", UserAgent: "KryspalMedia-fanart/" + version(), Timeout: requestTimeout,
+		MinInterval: interval, MaxBodyBytes: maxResponseBytes, RetryAfter: defaultRetryAfter, Transport: rt})}
 }
 
 // get sends the request and returns the status code; on 200 it parses the JSON into out. A 429 returns sdk.RateLimited; 401 and 403 return
 // errUnauthorized; 5xx and connection errors return sdk.Unavailable; other statuses (404 means no images) are returned for the caller to decide.
 func (a *api) get(ctx context.Context, key, rawURL string, out any) (int, error) {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	if d := time.Until(a.last.Add(a.interval)); d > 0 {
-		t := time.NewTimer(d)
-		select {
-		case <-t.C:
-		case <-ctx.Done():
-			t.Stop()
-			return 0, ctx.Err()
-		}
-	}
-	a.last = time.Now()
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, rawURL, nil)
+	resp, err := a.c.Do(ctx, httpclient.Request{URL: rawURL, Header: http.Header{"Api-Key": {key}}})
 	if err != nil {
-		return 0, sdk.Unavailable("fanart: bad request")
+		return 0, err
 	}
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("User-Agent", "KryspalMedia-fanart/"+version())
-	req.Header.Set("api-key", key)
-	resp, err := a.http.Do(req)
-	if err != nil {
-		var ue *url.Error
-		if errors.As(err, &ue) {
-			err = ue.Err // url.Error carries the full URL; keep only the cause
-		}
-		if ctx.Err() != nil {
-			return 0, ctx.Err()
-		}
-		return 0, sdk.Unavailable("fanart: " + err.Error())
-	}
-	defer func() { _ = resp.Body.Close() }()
-	switch {
-	case resp.StatusCode == http.StatusTooManyRequests:
-		d := defaultRetryAfter
-		if s, err := strconv.Atoi(resp.Header.Get("Retry-After")); err == nil && s > 0 {
-			d = time.Duration(s) * time.Second
-		}
-		return resp.StatusCode, sdk.RateLimited(d, "fanart: rate limit reached")
-	case resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden:
-		_, _ = io.Copy(io.Discard, io.LimitReader(resp.Body, maxResponseBytes))
-		return resp.StatusCode, errUnauthorized
-	case resp.StatusCode >= 500:
-		return resp.StatusCode, sdk.Unavailable(fmt.Sprintf("fanart: %s", resp.Status))
-	case resp.StatusCode != http.StatusOK:
-		_, _ = io.Copy(io.Discard, io.LimitReader(resp.Body, maxResponseBytes))
-		return resp.StatusCode, nil
-	}
-	raw, err := io.ReadAll(io.LimitReader(resp.Body, maxResponseBytes))
-	if err != nil {
-		return resp.StatusCode, sdk.Unavailable("fanart: " + err.Error())
-	}
-	if out != nil {
-		if err := json.Unmarshal(raw, out); err != nil {
-			return resp.StatusCode, sdk.Unavailable("fanart: bad response")
+	switch resp.Status {
+	case http.StatusTooManyRequests:
+		return resp.Status, resp.RateLimit("fanart")
+	case http.StatusUnauthorized, http.StatusForbidden:
+		return resp.Status, errUnauthorized
+	case http.StatusOK:
+		if out != nil {
+			if err := json.Unmarshal(resp.Body, out); err != nil {
+				return resp.Status, sdk.Unavailable("fanart: bad response")
+			}
 		}
 	}
-	return resp.StatusCode, nil
+	return resp.Status, nil
 }

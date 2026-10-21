@@ -79,7 +79,7 @@ func newFake(t *testing.T, h func(w http.ResponseWriter, r *http.Request)) *fake
 func configured(t *testing.T, f *fakeServer) *plugin {
 	t.Helper()
 	p := newPlugin()
-	p.api = &api{http: f.Client(), interval: 0}
+	p.api = newAPIWith(0, f.Client().Transport)
 	resp, err := p.Configure(context.Background(), &pluginv1.ConfigureRequest{Values: map[string]string{keyAPIKey: testKey, keyBaseURL: f.URL}})
 	if err != nil || len(resp.GetFieldErrors()) != 0 {
 		t.Fatalf("Configure = %v, %v", resp, err)
@@ -270,7 +270,7 @@ func TestUpstreamStatuses(t *testing.T) {
 func TestWithoutAKeyTheCallNeedsConfiguration(t *testing.T) {
 	f := newFake(t, serve(movieBody))
 	p := newPlugin()
-	p.api = &api{http: f.Client()}
+	p.api = newAPIWith(0, f.Client().Transport)
 	_, err := p.GetImages(context.Background(), &pluginv1.GetImagesRequest{Type: pluginv1.ItemType_ITEM_TYPE_MOVIE, ProviderIds: map[string]string{"tmdb": "1"}})
 	if status.Code(err) != codes.FailedPrecondition || f.hits.Load() != 0 {
 		t.Errorf("err %v, %d requests", err, f.hits.Load())
@@ -292,7 +292,7 @@ func TestRequestsAreSpacedAndOneAtATime(t *testing.T) {
 		_, _ = w.Write([]byte(`{}`))
 	})
 	p := configured(t, f)
-	p.api.interval = 60 * time.Millisecond
+	p.api = newAPIWith(60*time.Millisecond, f.Client().Transport)
 	start := time.Now()
 	done := make(chan struct{})
 	for i := range 3 {
