@@ -2,6 +2,10 @@
 
 All notable changes to this plugin are listed here. The version in `VERSION` is the single source of the version number; a published version is never changed.
 
+## 1.1.1
+
+- Built with plugin SDK v0.6.0. The fanart.tv client now uses the SDK's HTTP client. No functional change.
+
 ## 1.1.0
 
 - Tells servers that show it when fanart.tv knows no images for a title ("not found" notice), so the user can tell "nothing there" from "not asked". Older servers get exactly the answer they got before.
